@@ -1,0 +1,348 @@
+﻿
+<div class="toast bg-success text-white" id="toastOK" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="fa-solid fa-circle-check"></i>
+        <strong class="me-auto">Cadastro</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div id="textToastOK" class="toast-body">
+        Pesquisa realizada com sucesso.
+    </div>
+</div>
+
+<div class="toast bg-danger text-white" id="toastErro" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <strong class="me-auto">Erro</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+        Ocorreu um erro durante a operação.
+    </div>
+</div>
+
+
+<h4 class="mb-5">Consultar cliente</h4>
+<form class="border border-light" action="" id="ConsultarClienteForm">
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="InputCpf">CPF:</label>
+                <input type="text" class="form-control" id="cpf" name="cpf">
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="InputNome">Nome:</label>
+                <input type="text" class="form-control d-inline" name="nome">
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <div class='date' id='datetimepicker1'>
+                    <label for="Nascimento">Data de Nascimento:</label>
+                    @*<input placeholder="id" type="text" name="nascimento" value="2023-02-17T01:28:17.262Z" />*@
+                    <input type='text' class="form-control" id="nascimento" name="nascimento" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="sexo">Sexo :</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sexo" id="radioMasculino" value="Masculino">
+                        <label class="form-check-label" for="radioMasculino">Masculino</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sexo" id="radioFeminino" value="Feminino">
+                        <label class="form-check-label" for="radioFeminino">Feminino</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="endereco">Endereço:</label>
+                <input type="text" class="form-control" id="endereco" name="endereco">
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="autoCompleteEstado">Estado:</label>
+
+                <input id="autoCompleteEstado" name="estado" class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="autoCompleteCidade">Cidade:</label>
+
+                <input id="autoCompleteCidade" name="cidade" class="form-control" />
+            </div>
+        </div>
+
+    </div>
+    <div class="d-flex justify-content-end mt-3">
+
+        <button type="submit" id="salvar" class="btn btn-primary">Pesquisar</button>&nbsp;
+        <button type="reset" id="limpar" class="btn btn-secondary">Limpar</button>
+    </div>
+
+</form>
+
+
+<div id="divTabela">
+    <table id="tableClientes" class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Cpf</th>
+                <th scope="col">Data Nasc.</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Cidade</th>
+                <th scope="col">Sexo</th>
+            </tr>
+        </thead>
+        <tbody id="clientesList">
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation">
+        <ul id="pager" class="pagination">
+            @*<li class="page-item"><a class="page-link" href="#">3</a></li>*@
+        </ul>
+    </nav>
+</div>
+
+
+
+@section scripts{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
+
+    <script>
+
+        $(function () {
+            var avaiableEstados = [];
+            var avaiableCidades = [];
+
+            PopulateEstados();
+            function PopulateEstados() {
+                var url = "@Url.Content("~/api/Utilitario/GetEstados")";
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (response) {
+                        console.log("populate estados");
+                        // console.log(JSON.stringify(response));
+                        $.each(response, function (i, item) {
+                            avaiableEstados.push(item.nomeEstado);
+                        });
+                    }
+                });
+            }
+            $("#autoCompleteEstado").autocomplete({
+                source: avaiableEstados,
+                select: function (event, ui) {
+                    avaiableCidades.length = 0;
+                    var url = "@Url.Content("~/api/Utilitario/GetCidadesPorEstado?NomeEstado=")" + ui.item.value;
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        success: function (response) {
+                            //   alert(JSON.stringify(response));
+                            setAutocompletCurrentValue("#autoCompleteCidade", '');
+                            $.each(response, function (i, item) {
+                                avaiableCidades.push(item.nomeCidade);
+                            });
+                        }
+                    });
+                    //log("Selected: " + ui.item.value + " aka " + ui.item.id);
+                }
+            });
+
+            $("#autoCompleteCidade").autocomplete({
+                source: avaiableCidades
+            });
+            var clientes = [];
+            var pagesPaginationPage = 10;
+            var numeroClientes = 0;
+            var pageNumber = 0;
+            var pageSize = 10;
+            var pageNumbers = 0;
+            var isFiltrado = false;
+
+            CriarGrid()
+
+            GetListClientes(pageNumber);
+
+            $("#pager").on("click", "li.page-item", function (e) {
+                $(this).addClass("active").siblings().removeClass("active")
+                pageNumber = $(this).find("a").text() - 1;
+                if (isFiltrado) {
+                    ConsultaFiltrado(pageNumber, false);
+                }
+                else {
+                    GetListClientes(pageNumber);
+                }
+
+            })
+            function CriarGrid() {
+
+            }
+
+
+            $("#ConsultarClienteForm").submit(function (e) {
+                e.preventDefault();
+                ConsultaFiltrado(0, true);
+                isFiltrado = true;
+            });
+
+
+            function ConsultaFiltrado(pageNumber, toast) {
+                var $form = $("#ConsultarClienteForm");
+                var formArray = getFormData($form);
+                var json = JSON.stringify(formArray);
+                var url = "@Url.Content("~/api/Cliente/ListClientesFiltrado")";
+                url = url + "?pageSize=" + pageSize + "&pagenumber=" + pageNumber;
+                var sexo = '';
+                if ($("#radioMasculino").is(":checked")) {
+                    sexo = "Masculino";
+                }
+                else if ($("#radioFeminino").is(":checked")) {
+                    sexo = "Feminino";
+                }
+                var insertStr = '"sexo" : "' + sexo + '",';
+                json = json.substring(0, 1) + insertStr + json.substring(1);
+                $('#salvar').attr('disabled', 'disabled');
+                $.ajax({
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    type: "POST",
+                    url: url,
+                    data: json,
+                    success: function (response) {
+                        console.log("response filtro");
+                        console.log(JSON.stringify(response));
+                        CriarTabelaGrid(response.clientes, response.total);
+                        if (toast) {
+                            $("#textToastOK").text("Pesquisa realizada com sucesso.");
+                            $('#toastOK').toast('show');
+
+                        }
+                        $('#salvar').removeAttr('disabled');
+                    },
+                    error: function (error) {
+                        console.log(JSON.stringify(error));
+                        $('#toastErro').toast('show');
+                        $('#salvar').removeAttr('disabled');
+                    }
+                });
+            }
+
+            $("#limpar").click(function () {
+                $("#divTabela").removeClass("invisible");
+                $("#divTabela").addClass("visible");
+                GetListClientes(0);
+                isFiltrado = false;
+            });
+
+            function GetListClientes(pageNumber) {
+                var url = '@Url.Content("~/api/Cliente/ListClientesPage")';
+                url = url + "?pageSize=" + pageSize + "&pagenumber=" + pageNumber;
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (response) {
+                        CriarTabelaGrid(response.clientes, response.total);
+                    }
+                });
+            }
+            function CriarTabelaGrid(response, total) {
+                var $table = $('#clientesList');
+                $("#clientesList tr").remove();
+                $.each(response, function (i, item) {
+                    clientes.push(item);
+                    var data = item.nascimento;
+                    var year = data.substring(0, 4);
+                    var month = data.substring(5, 7);
+                    var day = data.substring(8, 10);
+                    item.nascimento = day + "/" + month + "/" + year;
+                    $table.append('<tr><td><a href="/Cadastrar/' + item.id + '">Atualizar</a></td><td><a href="/Cadastrar/Apagar/' + item.id + '">Apagar</a></td><td>' + item.nome + '</td><td>' + item.cpf + '</td><td>' + item.nascimento + '</td><td>' + item.estado + '</td><td>' + item.cidade + '</td><td>' + item.sexo + '</td></tr>');
+                });
+                numeroClientes = total
+                pageNumbers = numeroClientes / pageSize;
+                CriarPagination();
+
+            }
+            function CriarPagination() {
+                $("#pager li").remove();
+                if (numeroClientes > 0) {
+                    for (var i = 0; i <= pageNumbers; i++) {
+                        if (i == pageNumber) {
+                            $("#pager").append('<li class="page-item active"><a class="page-link">' + (i + 1) + '</a></li >');
+                        }
+                        else {
+                            $("#pager").append('<li class="page-item"><a class="page-link">' + (i + 1) + '</a></li >');
+                        }
+                    }
+                }
+            }
+            function getFormData($form) {
+                var unindexed_array = $form.serializeArray();
+                //hack para converter data
+                for (var i = 0; i < unindexed_array.length; i++) {
+                    if (unindexed_array[i]['name'] == "nascimento") {
+                        //var data = unindexed_array[i]['value'];
+                        //var year = data.substring(6, 10);
+                        //var month = data.substring(3, 5);
+                        //var day = data.substring(0, 2);
+                        //formattedDate = year + "-" + month + "-" + day + "T00:00:00.0000Z";
+                        //unindexed_array[i]['value'] = formattedDate;
+                        unindexed_array[i]['value'] = '2022-02-22T00:00:00.0000Z';
+                    }
+                    if (unindexed_array[i]['name'] == "sexo") {
+                        console.log("sexo::::::::::::::::::" + unindexed_array[i]['value']);
+                        //  unindexed_array[i]['value'] = '2022-02-22T00:00:00.0000Z';
+                    }
+                }
+                var indexed_array = {};
+                $.map(unindexed_array, function (n, i) {
+                    indexed_array[n['name']] = n['value'];
+                });
+                return indexed_array;
+            }
+            function setAutocompletCurrentValue(id, value) {
+                $(id).val(value);
+                var textToShow = $(id).find(":selected").text();
+                $(id).parent().find("span").find("input").val(textToShow);
+            }
+            $('#nascimento').datepicker({
+                showOn: 'focus',
+                buttonImage: 'images/calendar.png',
+                buttonImageOnly: true,
+                dateFormat: 'dd/mm/yy',
+                dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+                dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'],
+                dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                nextText: 'Próximo',
+                prevText: 'Anterior'
+            });
+            $('#cpf').mask('000.000.000-00');
+        });
+
+
+    </script>
+}

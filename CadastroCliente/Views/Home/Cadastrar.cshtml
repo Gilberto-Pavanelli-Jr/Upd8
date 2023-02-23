@@ -1,0 +1,370 @@
+﻿@using Domain.Entities;
+
+@{
+    List<Estado> estados = ViewBag.Estados;
+    Cliente? cliente = null;
+    if (ViewBag.Cliente != null)
+    {
+        cliente = ViewBag.Cliente;
+    }
+
+}
+<div class="toast bg-success text-white" id="toastOK" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="fa-solid fa-circle-check"></i>
+        <strong class="me-auto">Cadastro</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div id="textToastOK" class="toast-body">
+        Cliente cadastrado com sucesso.
+    </div>
+</div>
+
+<div class="toast bg-danger text-white" id="toastErro" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <strong class="me-auto">Erro</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+        Ocorreu um erro durante a operação.
+    </div>
+</div>
+
+
+<h4 class="mb-5">Cadastrar cliente</h4>
+<form class="border border-light" action="" id="CriarClienteForm">
+
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="InputCpf">CPF:</label>
+                <input type="text" class="form-control" id="cpf" name="cpf" required>
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="InputNome">Nome:</label>
+                <input type="text" class="form-control d-inline" id="nome" name="nome" required>
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <div class='date' id='datetimepicker1'>
+                    <label for="Nascimento">Data de Nascimento:</label>
+                    <input type='text' class="form-control" id="nascimento" required name="nascimento" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-3 col-xl-3 col-xxl-3 mb-2">
+            <div class="form-group">
+                <label for="sexo">Sexo :</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sexo" id="radioMasculino" checked value="Masculino">
+                        <label class="form-check-label" for="inlineRadio1">Masculino</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="sexo" id="radioFeminino" value="Feminino">
+                        <label class="form-check-label" for="inlineRadio2">Feminino</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="endereco">Endereço:</label>
+                <input type="text" class="form-control" id="endereco" required name="endereco">
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="autoCompleteEstado">Estado:</label>
+                <input id="autoCompleteEstado" name="estado" required class="form-control" />
+            </div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-12 col-lg-4 col-xl-4 col-xxl-4 mb-2">
+            <div class="form-group">
+                <label for="autoCompleteCidade">Cidade:</label>
+                <input id="autoCompleteCidade" name="cidade" required class="form-control" />
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+        <button type="submit" id="apagar" class="btn btn-danger invisible">Apagar</button>&nbsp;
+        <button type="submit" id="salvar" class="btn btn-primary">Salvar</button>&nbsp;
+        <button type="reset" id="limpar" class="btn btn-secondary">Limpar</button>
+    </div>
+</form>
+
+@section scripts{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.15/jquery.mask.min.js"></script>
+
+    <script>
+
+        $(function () {
+
+            //$('#toastErro').toast('show');
+            var avaiableEstados = [];
+            var avaiableCidades = [];
+            var cliente;
+            var apagar;
+
+            PopulateEstados();
+            GetClienteById();
+            function PopulateEstados() {
+                var url = "@Url.Content("~/api/Utilitario/GetEstados")";
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (response) {
+                        $.each(response, function (i, item) {
+                            avaiableEstados.push(item.nomeEstado);
+                        });
+                    }
+                });
+            }
+            function PopulateForm() {
+                $("#cpf").val(cliente.cpf);
+                $("#nome").val(cliente.nome);
+                var data = cliente.nascimento;
+                var year = data.substring(0, 4);
+                var month = data.substring(5, 7);
+                var day = data.substring(8, 10);
+                cliente.nascimento = day + "/" + month + "/" + year;
+                $("#nascimento").val(cliente.nascimento);
+                if (cliente.sexo == "Masculino") {
+                    $("#radioMasculino").prop('checked', true);
+                }
+                else {
+                    $("#radioFeminino").prop('checked', true);
+                }
+                $("#endereco").val(cliente.endereco);
+                setAutocompletCurrentValue("#autoCompleteEstado", cliente.estado);
+                setAutocompletCurrentValue("#autoCompleteCidade", cliente.cidade);
+                $("#salvar").html('Atualizar');
+            }
+
+            function GetClienteById() {
+                var fullUrl = window.location.pathname;
+                var splitUrl = fullUrl.split('/');
+                var id = splitUrl[splitUrl.length - 1];
+                if (splitUrl[splitUrl.length - 2].toLowerCase() == "apagar") {
+                    console.log("apagar");
+                    $("#salvar").remove();
+                    $("#apagar").addClass("visible");
+                    $("#apagar").removeClass("invisible");
+                    apagar = true;
+                }
+                var url = '@Url.Content("~/api/Cliente/GetClienteById/")' + id;
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function (response) {
+                        console.log(JSON.stringify(response));
+                        cliente = response;
+                        if (cliente != null) {
+                            PopulateForm();
+                        }
+                    }
+                });
+            }
+            $("#autoCompleteEstado").autocomplete({
+                source: avaiableEstados,
+                select: function (event, ui) {
+                    avaiableCidades.length = 0;
+                    var url = "@Url.Content("~/api/Utilitario/GetCidadesPorEstado?NomeEstado=")" + ui.item.value;
+                    $.ajax({
+                        type: "GET",
+                        url: url,
+                        success: function (response) {
+                            setAutocompletCurrentValue("#autoCompleteCidade", '');
+                            $.each(response, function (i, item) {
+                                avaiableCidades.push(item.nomeCidade);
+                            });
+                        }
+                    });
+                }
+            });
+
+            function setAutocompletCurrentValue(id, value) {
+                $(id).val(value);
+                var textToShow = $(id).find(":selected").text();
+                $(id).parent().find("span").find("input").val(textToShow);
+            }
+
+            $("#autoCompleteCidade").autocomplete({
+                source: avaiableCidades
+            });
+            $('#cpf').mask('000.000.000-00');
+
+            $('#nascimento').datepicker({
+                showOn: 'focus',
+                buttonImage: 'images/calendar.png',
+                buttonImageOnly: true,
+                dateFormat: 'dd/mm/yy',
+                dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+                dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S', 'D'],
+                dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                nextText: 'Próximo',
+                prevText: 'Anterior'
+            });
+
+            $.validator.addMethod('CpfValidationRule', function (value, element, param) {
+                value = value.replace('.', '');
+                value = value.replace('.', '');
+                value = value.replace('-', '');
+                return ValidaCpf(value.replace('.', '').replace('-', ''));
+            }, 'Cpf inválido.');
+
+
+            $("#CriarClienteForm").validate({
+                //  ignore: [],
+                submitHandler: function (form) {
+                    event.preventDefault();
+                    var $form = $(event.target);
+                    var formArray = getFormData($form);
+                    var json = JSON.stringify(formArray);
+                    $('#salvar').attr('disabled', 'disabled');
+                    if (apagar) {
+                        var insertStr = '"id" : "' + cliente.id + '",';
+                        json = json.substring(0, 1) + insertStr + json.substring(1);
+                        $.ajax({
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            type: "DELETE",
+                            url: "@Url.Content("~/api/Cliente/ApagarCliente/")" + cliente.id,
+                            data: json,
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            success: function (response) {
+                                $("#textToastOK").text("Cadastro apagado com sucesso");
+                                $('#toastOK').toast('show');
+                                $('#apagar').removeAttr('disabled');
+                                setTimeout(
+                                    function () {
+                                        window.location.replace("/Home/Consultar");
+                                    }, 3000);
+                            },
+                            error: function (error) {
+                                $('#toastErro').toast('show');
+                                $('#apagar').removeAttr('disabled');
+                            }
+                        });
+                    }
+                    else {
+
+
+                        if ($("#salvar").text() == "Salvar") {
+                            $.ajax({
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                type: "POST",
+                                url: "@Url.Content("~/api/Cliente/Criar")",
+                                data: json,
+                                contentType: "application/json; charset=utf-8",
+                                dataType: "json",
+                                success: function (response) {
+                                    $('#toastOK').toast('show');
+                                    $('#salvar').removeAttr('disabled');
+                                    setTimeout(
+                                        function () {
+                                            window.location.replace("/Home/Consultar");
+                                        }, 3000);
+                                },
+                                error: function (error) {
+                                    $('#toastErro').toast('show');
+                                    $('#salvar').removeAttr('disabled');
+                                }
+                            });
+                        } else {
+                            var insertStr = '"id" : "' + cliente.id + '",';
+                            json = json.substring(0, 1) + insertStr + json.substring(1);
+                            $.ajax({
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                type: "PUT",
+                                url: "@Url.Content("~/api/Cliente/UpdateCliente/")" + cliente.id,
+                                data: json,
+                                contentType: "application/json; charset=utf-8",
+                                dataType: "json",
+                                success: function (response) {
+                                    $("#textToastOK").text("Cadastro atualizado com sucesso");
+                                    $('#toastOK').toast('show');
+                                    $('#salvar').removeAttr('disabled');
+                                },
+                                error: function (error) {
+                                    $('#toastErro').toast('show');
+                                    $('#salvar').removeAttr('disabled');
+                                }
+                            });
+                        }
+                    }
+
+                },
+                rules: {
+                    cpf: {
+                        CpfValidationRule: true
+                    }
+                },
+            });
+        });
+        function getFormData($form) {
+            var unindexed_array = $form.serializeArray();
+            //hack para converter data
+            for (var i = 0; i < unindexed_array.length; i++) {
+                if (unindexed_array[i]['name'] == "nascimento") {
+                    var data = unindexed_array[i]['value'];
+                    var year = data.substring(6, 10);
+                    var month = data.substring(3, 5);
+                    var day = data.substring(0, 2);
+                    formattedDate = year + "-" + month + "-" + day + "T00:00:00.0000Z";
+                    unindexed_array[i]['value'] = formattedDate;
+                }
+            }
+            var indexed_array = {};
+            $.map(unindexed_array, function (n, i) {
+                indexed_array[n['name']] = n['value'];
+            });
+            return indexed_array;
+        }
+        function ValidaCpf(strCPF) {
+            var Soma;
+            var Resto;
+            Soma = 0;
+            if (strCPF == "00000000000") return false;
+
+            for (i = 1; i <= 9; i++) Soma = Soma + parseInt(strCPF.substring(i - 1, i)) * (11 - i);
+            Resto = (Soma * 10) % 11;
+
+            if ((Resto == 10) || (Resto == 11)) Resto = 0;
+            if (Resto != parseInt(strCPF.substring(9, 10))) return false;
+
+            Soma = 0;
+            for (i = 1; i <= 10; i++) Soma = Soma + parseInt(strCPF.substring(i - 1, i)) * (12 - i);
+            Resto = (Soma * 10) % 11;
+
+            if ((Resto == 10) || (Resto == 11)) Resto = 0;
+            if (Resto != parseInt(strCPF.substring(10, 11))) return false;
+            return true;
+        }
+
+        function TextToastOK(texto) {
+            $("#toastOk div.toast-body").text("");
+        }
+    </script>
+}
